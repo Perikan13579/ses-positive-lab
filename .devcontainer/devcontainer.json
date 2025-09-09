@@ -1,0 +1,44 @@
+{
+  "name": "SES Positive Lab Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "postCreateCommand": "npm install --prefix ./frontend && python3 -m venv ./backend/.venv && bash -c 'source ./backend/.venv/bin/activate && pip install --no-cache-dir -r ./backend/requirements.txt'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "dev.containers.copyGitConfig": true,
+        "dev.containers.mountWorkspaceGitRoot": true,
+        "python.defaultInterpreterPath": "/app/backend/.venv/bin/python",
+        "python.languageServer": "Pylance"
+      }
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest"
+    }
+  },
+  "mounts": [
+    {
+      "type": "volume",
+      "source": "vscode-node-modules-${localWorkspaceFolderBasename}",
+      "target": "/app/frontend/node_modules"
+    },
+    {
+      "source": "/var/run/docker.sock",
+      "target": "/var/run/docker-host.sock",
+      "type": "bind"
+    }
+  ],
+  "forwardPorts": [3000, 8000],
+  "remoteUser": "node"
+}

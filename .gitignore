@@ -1,0 +1,22 @@
+# Node.js
+node_modules/
+build/
+
+# Python
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.venv/
+*.pyc
+*.log
+
+# Environment variables
+.env
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE specific (optional, uncomment if you don't want to share)
+.vscode/
+.idea/
