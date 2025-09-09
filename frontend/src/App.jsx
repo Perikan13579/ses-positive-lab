@@ -14,7 +14,7 @@ function App() {
     setExplanation('');
 
     try {
-      const response = await fetch('http://localhost:8000/explanations/', {
+      const response = await fetch('http://http://3.14.126.161:8000/explanations/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ anken_detail: ankenDetail, negative_aspects: negativeAspects, shokumu_keireki: shokumuKeireki }),
