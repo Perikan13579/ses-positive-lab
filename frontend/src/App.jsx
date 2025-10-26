@@ -2,49 +2,53 @@ import { useState } from 'react';
 import './App.css';
 import InputForm from './components/InputForm';
 import ExplanationResult from './components/ExplanationResult';
+import { generateExplanation } from './api/explanationApi';
+import { UI_TEXTS } from './constants/messages';
 
 function App() {
+  // AI生成結果、ロード状態、APIエラーの状態を管理
   const [explanation, setExplanation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  const handleGenerate = async ({ ankenDetail, negativeAspects, shokumuKeireki }) => {
+  /**
+   * 説明生成ボタンが押された時のハンドラ。
+   * APIを呼び出し、結果またはエラーをステートに反映する。
+   * * @param {object} inputData - 案件情報、不満点、職務経歴
+   */
+  const handleGenerate = async ({ anken_detail, negative_aspects, shokumu_keireki }) => {
     setIsLoading(true);
-    setApiError(null);
-    setExplanation('');
+    setApiError(null); // 新しいリクエスト開始時にエラーをリセット
+    setExplanation(''); // 新しいリクエスト開始時に結果をリセット
+    const inputData = { anken_detail, negative_aspects, shokumu_keireki };
 
     try {
-      const response = await fetch('http://http://3.14.126.161:8000/explanations/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ anken_detail: ankenDetail, negative_aspects: negativeAspects, shokumu_keireki: shokumuKeireki }),
-      });
+      const resultExplanation = await generateExplanation(inputData);
+      setExplanation(resultExplanation); // 成功した結果をセット
 
-      const data = await response.json();
-      if (!response.ok) {
-        setApiError(data.detail || '通信中に予期せぬエラーが発生しました。');
-      } else {
-        setExplanation(data.explanation);
-      }
     } catch (err) {
-      setApiError('通信中に予期せぬエラーが発生しました。時間を置いて再度お試しください。');
-      console.error('API呼び出しエラー:', err);
+      setApiError(err.message); // エラーメッセージをセット
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // 処理完了
     }
   };
 
+  /**
+   * リセットボタンが押された時のハンドラ。
+   * 全ての状態を初期値に戻し、入力フォームに戻る。
+   */
   const handleReset = () => {
     setExplanation('');
     setApiError(null);
   };
-
+  
   return (
     <div className="App">
       <header className="App-header">
-        <h1>SES案件ポジティブ説明アプリ</h1>
+        <h1>{UI_TEXTS.APP_HEADER_TITLE}</h1>
       </header>
       <main className="App-main">
+        {/* explanation が空の場合、入力フォームを表示 */}
         {!explanation ? (
           <InputForm
             onGenerate={handleGenerate}
@@ -52,6 +56,7 @@ function App() {
             apiError={apiError}
           />
         ) : (
+          /* explanation がある場合、結果画面を表示 */
           <ExplanationResult
             explanation={explanation}
             onReset={handleReset}
@@ -59,7 +64,7 @@ function App() {
         )}
       </main>
       <footer className="App-footer">
-        <p>&copy; 2025 ペリカンうずら</p>
+        <p>{UI_TEXTS.APP_FOOTER_COPYRIGHT}</p>
       </footer>
     </div>
   );

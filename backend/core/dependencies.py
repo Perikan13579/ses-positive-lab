@@ -1,21 +1,24 @@
-import os
+from functools import lru_cache
 from openai import AsyncOpenAI
-from fastapi import HTTPException
-from exceptions.api_exceptions import ApiError
+from core.config import settings
+from exceptions.api_exceptions import ApiError 
+from constants.messages import ErrorMessages
 
-async def get_openai_client():
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    if not openai_api_key:
-        raise HTTPException(
-            status_code=ApiError.OPENAI_CLIENT_NOT_INITIALIZED[1],
-            detail=ApiError.OPENAI_CLIENT_NOT_INITIALIZED[0]
-        )
-    
+# @lru_cache() を使用してクライアントをシングルトンとしてキャッシュする
+@lru_cache()
+def get_openai_client() -> AsyncOpenAI:
+    """設定からAPIキーを使用してAsyncOpenAIクライアントを初期化し、キャッシュする。"""
     try:
-        client = AsyncOpenAI(api_key=openai_api_key)
-        yield client
-    except Exception:
-        raise HTTPException(
-            status_code=ApiError.OPENAI_CLIENT_NOT_INITIALIZED[1],
-            detail=ApiError.OPENAI_CLIENT_NOT_INITIALIZED[0]
+        return AsyncOpenAI(
+            api_key=settings.OPENAI_API_KEY
         )
+    except Exception as e:
+        # クライアント初期化時のエラーはカスタムApiErrorとしてラップする
+        raise ApiError(
+            status_code=500, 
+            detail=f"{ErrorMessages.CLIENT_INIT_ERROR} {type(e).__name__}: {str(e)}"
+        )
+
+def get_openai_client_dependency() -> AsyncOpenAI:
+    """FastAPIのDependsで使用するためのラッパー関数。"""
+    return get_openai_client()
