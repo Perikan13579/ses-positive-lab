@@ -1,13 +1,19 @@
+import PropTypes from 'prop-types';
 import { useState } from 'react';
 import Button from './common/Button';
-import { ERROR_MESSAGES } from '../constants/messages';
+import { ERROR_MESSAGES, UI_TEXTS } from '../constants/messages'; 
 
 function InputForm({ onGenerate, isLoading, apiError }) {
-  const [ankenDetail, setAnkenDetail] = useState('');
+  // 各フォーム入力フィールドのローカルステートを管理
+  const [ankenDetail, setAnkenDetail] =useState('');
   const [negativeAspects, setNegativeAspects] = useState('');
   const [shokumuKeireki, setShokumuKeireki] = useState('');
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({}); // 入力検証エラーメッセージを管理
 
+  /**
+   * フォーム送信前に必須フィールドの検証を行う。
+   * @returns {boolean} バリデーションが成功したかどうか
+   */
   const validateInputs = () => {
     const newErrors = {};
     if (!ankenDetail.trim()) {
@@ -20,8 +26,12 @@ function InputForm({ onGenerate, isLoading, apiError }) {
     return Object.keys(newErrors).length === 0;
   };
 
+  /**
+   * フィールドからフォーカスが外れた時 (onBlur) のエラー表示/非表示を処理する。
+   * shokumuKeirekiは任意項目なので検証しない。
+   */
   const handleBlur = (field, value) => {
-    if (!value.trim()) {
+    if (!value.trim() && (field === 'ankenDetail' || field === 'negativeAspects')) {
       let errorMessage = '';
       if (field === 'ankenDetail') {
         errorMessage = ERROR_MESSAGES.REQUIRED_ANKEN_DETAIL;
@@ -30,6 +40,7 @@ function InputForm({ onGenerate, isLoading, apiError }) {
       }
       setErrors((prevErrors) => ({ ...prevErrors, [field]: errorMessage }));
     } else {
+      // 値が入力されたらエラーをクリア
       setErrors((prevErrors) => {
         const updatedErrors = { ...prevErrors };
         delete updatedErrors[field];
@@ -38,66 +49,87 @@ function InputForm({ onGenerate, isLoading, apiError }) {
     }
   };
 
+  /**
+   * フォーム送信時のハンドラ。バリデーション後に親コンポーネントの生成関数を呼び出す。
+   */
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateInputs()) {
-      onGenerate({ ankenDetail, negativeAspects, shokumuKeireki });
+      onGenerate({ 
+        anken_detail: ankenDetail.trim(), 
+        negative_aspects: negativeAspects.trim(), 
+        shokumu_keireki: shokumuKeireki.trim(),
+      });
     }
   };
 
   return (
     <section className="input-section">
-      <h2>案件情報を入力して、新しい視点を見つけよう！</h2>
+      <h2>{UI_TEXTS.SECTION_TITLE}</h2>
       <form onSubmit={handleSubmit}>
         <p className="warning-message">
-          ⚠️氏名や個人情報、機密情報は入力しないでください。
+          {UI_TEXTS.WARNING_MESSAGE}
         </p>
 
+        {/* 1. 案件詳細の入力フィールド */}
         <div className="form-group">
-          <label htmlFor="ankenDetail">1. どのような案件ですか？ (必須)</label>
+          <label htmlFor="ankenDetail">{UI_TEXTS.ANKEN_LABEL}</label>
           <textarea
             id="ankenDetail"
             value={ankenDetail}
             onChange={(e) => setAnkenDetail(e.target.value)}
             onBlur={(e) => handleBlur('ankenDetail', e.target.value)}
-            placeholder="例：Javaを使用したテスト案件、など、案件について入力してください。"
+            placeholder={UI_TEXTS.ANKEN_PLACEHOLDER}
             rows={7}
           ></textarea>
-          {errors.ankenDetail && <p className="error-message">{errors.ankenDetail}</p>}
+          {/* バリデーションエラーメッセージの表示 */}
+          {errors.ankenDetail &&<p className="error-message">{errors.ankenDetail}</p>}
         </div>
 
+        {/* 2. 不満点の入力フィールド */}
         <div className="form-group">
-          <label htmlFor="negativeAspects">2. 今回の案件、正直どこが嫌ですか？ (必須)</label>
+          <label htmlFor="negativeAspects">{UI_TEXTS.NEGATIVE_ASPECTS_LABEL}</label>
           <textarea
             id="negativeAspects"
             value={negativeAspects}
-            onChange={(e) => setNegativeAspects(e.target.value)}
+            onChange={(e) =>setNegativeAspects(e.target.value)}
             onBlur={(e) => handleBlur('negativeAspects', e.target.value)}
-            placeholder="例：やりたい技術（React）と違う、通勤時間が長い、など、不安や不満に感じている点を記述してください。"
+            placeholder={UI_TEXTS.NEGATIVE_ASPECTS_PLACEHOLDER}
             rows={7}
           ></textarea>
           {errors.negativeAspects && <p className="error-message">{errors.negativeAspects}</p>}
         </div>
 
+        {/* 3. 職務経歴の入力フィールド (任意) */}
         <div className="form-group">
-          <label htmlFor="shokumuKeireki">3. あなたの職務経歴 (任意)</label>
+          <label htmlFor="shokumuKeireki">{UI_TEXTS.SHOKUMU_LABEL}</label>
           <textarea
             id="shokumuKeireki"
             value={shokumuKeireki}
-            onChange={(e) => setShokumuKeireki(e.target.value)}
+            onChange={(e) =>setShokumuKeireki(e.target.value)}
             onBlur={(e) => handleBlur('shokumuKeireki', e.target.value)}
-            placeholder="過去の経験言語、フレームワーク、ツール、担当した役割などを記述してください。ポジティブな説明の精度を高めるため、できるだけ詳細に入力してください。"
+            placeholder={UI_TEXTS.SHOKUMU_PLACEHOLDER}
             rows={5}
           ></textarea>
         </div>
         
+        {/* API通信エラーの表示 */}
         {apiError && <p className="error-message">{apiError}</p>}
+        
+        {/* 送信ボタン */}
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'AIが分析中…' : 'AIにポジティブな説明を生成してもらう'}
+          {isLoading ? UI_TEXTS.LOADING_MESSAGE : UI_TEXTS.GENERATE_BUTTON_TEXT}
         </Button>
       </form>
     </section>
   );
 }
+
+// PropTypeの定義 (親コンポーネントからのpropsの型チェック)
+InputForm.propTypes = {
+  isLoading: PropTypes.bool.isRequired,
+  apiError: PropTypes.string,
+  onGenerate: PropTypes.func.isRequired,
+};
 
 export default InputForm;

@@ -1,6 +1,11 @@
 from fastapi import status
 
-class ApiError:
+class ApiError(Exception):
+    def __init__(self, status_code: int, detail: str):
+        super().__init__(detail) 
+        self.status_code = status_code
+        self.detail = detail
+        
     OPENAI_API_KEY_NOT_SET = "OpenAI API Key is not set. Please set the OPENAI_API_KEY environment variable."
 
     API_CONNECTION_ERROR = ("APIへの接続に失敗しました。時間をおいてお試しください。", status.HTTP_503_SERVICE_UNAVAILABLE)
