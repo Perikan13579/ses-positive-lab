@@ -41,6 +41,16 @@ services:
       OPENAI_API_KEY: "dummy-key-for-test" 
       PYTHONWARNINGS: ${PYTHON_TEST_WARNINGS_FILTER}
     command: ["/bin/bash", "-c", "PYTHONPATH=/app pytest -v /app/tests/"]
+  
+  tester-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ses-positive-lab-tester-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: ["npm", "test", "--", "--watchAll=false"]
 
 secrets:
   openai_api_key:
