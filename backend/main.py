@@ -8,6 +8,8 @@ from exceptions.api_exceptions import ApiError
 from api.v1.explanation import router as explanation_router 
 from constants.messages import SystemMessages
 
+REACT_APP_API_BASE_URL="REACT_APP_API_BASE_URL"
+
 # FastAPIアプリケーションのメインインスタンスを初期化
 app = FastAPI(
     title="SES AI Positive Explanation API",
@@ -17,7 +19,7 @@ app = FastAPI(
 
 # CORSミドルウェアを設定。開発環境のため全てのオリジンを許可している
 origins = [
-    os.environ.get("REACT_APP_API_BASE_URL")
+    os.environ.get(REACT_APP_API_BASE_URL)
 ]
 
 app.add_middleware(
